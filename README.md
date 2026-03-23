@@ -49,7 +49,7 @@ https://www.digikey.com/short/q0m7mf3m
 
 * **(Highly Recommended) Power Capacitor:** 1x 1000µF to 3300µF (10V, 16V, or 25V) Electrolytic Capacitor. Wired across the 5V and Ground Wago Connectors to prevent the heavy servos from causing voltage drops and rebooting the ESP32. (https://www.amazon.com/dp/B07R432MR2)
 
-(Highly Recommended) Resistors: 2x 1kΩ - 4.7kΩ resistors (to place inline on the servo signal wires).
+**(Highly Recommended) Resistors**: 2x 1kΩ - 4.7kΩ resistors (to place inline on the servo signal wires). Wire from esp32, wire going to servo and one side of resistor soldered together, the other side of resistor goes to ground. Had a hard time to make this make sense with diagram.
 https://www.digikey.com/short/29dhzrrp
 
 (Optional) Compass: Adafruit BNO085 9-DOF IMU. Note, I went with this chip because it doesn't require calibration like drone GPS chips.
