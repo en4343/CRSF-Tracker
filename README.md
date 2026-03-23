@@ -59,7 +59,7 @@ https://www.amazon.com/dp/B0CDGZMLPP
 https://www.amazon.com/dp/B082FCRQS2
 
 🖨️ 3D Model Files
-The custom 3D-printed parts for the pan/tilt mechanics and electronics housing can be found here: MakerWorld: CRSF Antenna Tracker
+The custom 3D-printed parts for the pan/tilt mechanics and electronics housing can be found here: [MakerWorld: CRSF Antenna Tracker](https://makerworld.com/en/models/2561665-crsf-antenna-tracker#profileId-2822572)
 
 Wiring Diagram
 <img width="2582" height="8192" alt="ESP32 Controller Power-2026-03-23-065547" src="https://github.com/user-attachments/assets/c11f8bb8-9453-4223-8b5e-b129acad0497" />
