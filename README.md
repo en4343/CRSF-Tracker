@@ -6,14 +6,12 @@ Instead of relying on heavy onboard encoders or complex Mavlink wiring, this tra
 ⚠️ Critical Prerequisite: Your Transmitter (Radio)
 Your ExpressLRS transmitter MUST have a hardware "Backpack" chip installed. The backpack is a secondary ESP32 or ESP8285 chip inside your radio/module dedicated to communicating with ground station gear.
 
-Most modern external modules (Radiomaster Ranger, Happymodel ES24TX, BetaFPV Micro) and modern internal modules (Radiomaster Boxer, TX16S MKII) have this built-in.
+Most modern external modules (Radiomaster Ranger, Happymodel ES24TX, BetaFPV Micro) and modern internal modules (Radiomaster Boxer, TX16S MKII, GX12) have this built-in.
 
 Some older or ultra-budget internal modules do not have a backpack chip. Please verify your radio's specifications before building!
 
 ✨ Key Features
 100% Wireless Data Link: Reads native CRSF telemetry packets over ESP-NOW. No extra hardware required on the drone/plane!
-
-Dynamic ELRS Support: Automatically parses both ExpressLRS v3.x and v4.x packet structures.
 
 The "Gatekeeper" Safety: Refuses to calibrate until both the ground station and the aircraft have a rock-solid 8+ satellite 3D lock.
 
@@ -30,19 +28,28 @@ Microcontroller: ESP32 Dev Board (Standard 30 or 38-pin module).
 
 Servos: 2PCS DS3218 20kg 270-Degree Servos (Full metal gear, high torque, waterproof. You absolutely need the 270° version for proper pan rotation).
 
-Display: ELEGOO 0.96 Inch OLED Display (Must be 4-Pin I2C, and must use the SSD1306 chip. Do not buy the 1.3" SH1106 versions!)
+Display: ELEGOO 0.96 Inch OLED Display (Must be 4-Pin I2C, and must use the SSD1306 chip. Do not buy the 1.3" SH1106 versions!).
 
 Ground Station GPS: Any standard FPV GPS module with a UBlox chip (e.g., BN-220, Walksnail M10, Matek M10).
 
-Power Supply (BEC): A high-quality 5V BEC capable of at least 3A-5A continuous draw. Note: Do not power the heavy 20kg servos directly from the ESP32's 5V pin, you will fry the board! Use a dedicated BEC wired to the servos, and share the common ground.
+Power Supply (BEC): Castle Creations 10A BEC. A high-quality 5V BEC capable of at least 3A-5A continuous draw. Note: Do not power the heavy 20kg servos directly from the ESP32's 5V pin, you will fry the board! Use a dedicated BEC wired to the servos, and share the common ground.
 
-Wiring: Wago lever nuts/connectors (Highly recommended for cleanly splitting the 5V and Ground lines).
+Switches: 2X Momentary Button Switches.
 
-(Optional) Compass: Adafruit BNO085 9-DOF IMU.
+Wiring: 2X Wago lever nuts/connectors (Highly recommended for cleanly splitting the 5V and Ground lines. Home Depot also sells these and probably other hardware stores near you. One Wago has all your grounds connected together and the other all your positive leads connected together).
+
+(Highly Recommended) Resistors: 2x 1kΩ - 4.7kΩ resistors (to place inline on the servo signal wires).
+
+(Optional) Compass: Adafruit BNO085 9-DOF IMU. Note, I went with this chip because it doesn't require calibration like drone GPS chips.
 
 (Optional) Trim Knob: Standard 10k linear potentiometer.
 
+🖨️ 3D Model Files
+The custom 3D-printed parts for the pan/tilt mechanics and electronics housing can be found here: MakerWorld: CRSF Antenna Tracker
+
 💻 Software & Library Requirements
+The software used to compile the code and load it onto the ESP32 is the Arduino IDE.
+
 Before compiling, you must install the following libraries via the Arduino IDE Library Manager (Sketch -> Include Library -> Manage Libraries):
 
 ESP32Servo by Kevin Harrington
@@ -120,7 +127,8 @@ Click the right-pointing arrow (Upload) at the top left of the IDE.
 
 Troubleshooting Tip: If the IDE output window says "Connecting..." and dots start appearing, press and hold the physical BOOT button on your ESP32 board for 1-2 seconds to force it into flashing mode!
 
-📺 Troubleshooting: Is your OLED screen black?
+🛠️ Troubleshooting
+📺 Is your OLED screen black?
 If your code compiled and flashed successfully, but your OLED screen remains completely black, you likely have a screen with an alternate I2C address.
 
 Open AntTrack.ino in the Arduino IDE.
@@ -129,6 +137,23 @@ Scroll down to void setup() and look for this line:
 if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
 
 Change 0x3C to 0x3D and re-upload the code.
+
+✈️ ArduPilot Users: The "CRSF Passthrough" Trap
+If you are flying a fixed-wing on ArduPilot, your tracker might sit there completely lifeless even if your ground station has a GPS lock and your radio is connected.
+
+The Problem: If you enable "CRSF Passthrough Telemetry" in ArduPilot (typically used to run the Yaapu Telemetry script on your radio's screen), ArduPilot stops broadcasting standard CRSF GPS packets (Frame 0x02). Instead, it bundles all telemetry into a custom, compressed format that the tracker cannot read. Without those standard GPS packets, the tracker doesn't know where the plane is, and the servos will not wake up.
+
+The Fix: You must disable CRSF Passthrough to restore standard GPS telemetry.
+
+Connect your flight controller to Mission Planner (or QGroundControl).
+
+Go to your Full Parameter Tree (or Parameter List) and search for RC_OPTIONS.
+
+Check the bitmask value. "CRSF Passthrough" is controlled by Bit 8 (Value: 256).
+
+If it is enabled, uncheck the "Passthrough" box in the bitmask helper (or manually subtract 256 from the total integer value).
+
+Write the parameters and reboot your flight controller. It will instantly revert to broadcasting standard CRSF GPS packets, and your tracker will wake up!
 
 🎯 Daily Flight Operations
 1. Boot Sequence & Connection
@@ -164,6 +189,11 @@ The OLED screen will prominently display "RELEASE TO CLEAR".
 Release the button. The screen will confirm "FAILSAFE CLEARED," allowing you to perform a normal 1-second calibration for your new location.
 
 💡 Pro-Tips & Advanced Usage
+🔧 The "Startup Twitch" & Flashing Issues (Why you need a resistor)
+ESP32 microcontrollers are incredibly sensitive during their boot sequence. When you try to flash new firmware or power on the tracker, the ESP32 might fail to connect to your computer, or your heavy 20kg servos might violently twitch and slam against their physical limits. This happens because the servo's internal circuitry can interfere with the ESP32's "strapping pins," confusing the board about whether it should be booting up or waiting for a firmware upload.
+
+The Fix: Solder a simple 1kΩ to 4.7kΩ resistor inline on the PWM data wire between the ESP32 and each servo. This isolates the ESP32's pins just enough to protect the boot sequence, ensuring you can flash new firmware via USB without having to physically unplug your servos every time! It also acts as a safety buffer to stop the dreaded startup twitch.
+
 The Cross-Wind Launch Trick (Managing Servo Limits)
 Your pan servo has 270° of total rotation. When you calibrate the tracker, that calibration point becomes the physical dead-center of the servo, giving you 135° of tracking range to the left, and 135° to the right.
 
