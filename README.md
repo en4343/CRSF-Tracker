@@ -97,7 +97,7 @@ Open the ExpressLRS Lua Script on your radio, scroll down to Backpack, and ensur
 Step 2: Find your ELRS Binding MAC Address (Crucial!)
 Because this tracker sniffs raw ESP-NOW packets, it must impersonate your specific transmitter. You need to convert your ELRS Binding Phrase into a 6-digit UID array.
 
-Go to the ExpressLRS UID Generator.
+Go to the ExpressLRS UID Generator. https://www.expresslrs.org/hardware/spi-receivers/#binding-phrase-via-cli
 
 Type your secret Binding Phrase into the "Binding Phrase" box.
 
