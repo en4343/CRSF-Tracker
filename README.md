@@ -25,26 +25,35 @@ Live RF Trim (Optional): Supports a physical potentiometer knob to micro-adjust 
 To build this tracker, you will need the following components:
 
 Microcontroller: ESP32 Dev Board (Standard 30 or 38-pin module).
+https://www.amazon.com/dp/B08D5ZD528?
 
 Servos: 2PCS DS3218 20kg 270-Degree Servos (Full metal gear, high torque, waterproof. You absolutely need the 270° version for proper pan rotation).
+https://www.amazon.com/dp/B08MTQ1QD1
 
 Display: ELEGOO 0.96 Inch OLED Display (Must be 4-Pin I2C, and must use the SSD1306 chip. Do not buy the 1.3" SH1106 versions!).
+https://www.amazon.com/dp/B0D2RMQQHR
 
 Ground Station GPS: Any standard FPV GPS module with a UBlox chip (e.g., BN-220, Walksnail M10, Matek M10).
 
 Power Supply (BEC): Castle Creations 10A BEC. A high-quality 5V BEC capable of at least 3A-5A continuous draw. Note: Do not power the heavy 20kg servos directly from the ESP32's 5V pin, you will fry the board! Use a dedicated BEC wired to the servos, and share the common ground.
+https://www.readymaderc.com/products/details/castle-creations-bec-switching-regulator-10-amp-peak
 
 Switches: 2X Momentary Button Switches.
+https://www.amazon.com/dp/B07931588C
 
 Wiring: 2X Wago lever nuts/connectors (Highly recommended for cleanly splitting the 5V and Ground lines. Home Depot also sells these and probably other hardware stores near you. One Wago has all your grounds connected together and the other all your positive leads connected together).
+https://www.digikey.com/short/q0m7mf3m
 
 * **(Highly Recommended) Power Capacitor:** 1x 1000µF to 3300µF (10V, 16V, or 25V) Electrolytic Capacitor. Wired across the 5V and Ground Wago Connectors to prevent the heavy servos from causing voltage drops and rebooting the ESP32. (https://www.amazon.com/dp/B07R432MR2)
 
 (Highly Recommended) Resistors: 2x 1kΩ - 4.7kΩ resistors (to place inline on the servo signal wires).
+https://www.digikey.com/short/29dhzrrp
 
 (Optional) Compass: Adafruit BNO085 9-DOF IMU. Note, I went with this chip because it doesn't require calibration like drone GPS chips.
+https://www.amazon.com/dp/B0CDGZMLPP
 
 (Optional) Trim Knob: Standard 10k linear potentiometer.
+https://www.amazon.com/dp/B082FCRQS2
 
 🖨️ 3D Model Files
 The custom 3D-printed parts for the pan/tilt mechanics and electronics housing can be found here: MakerWorld: CRSF Antenna Tracker
