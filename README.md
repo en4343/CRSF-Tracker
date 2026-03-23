@@ -41,6 +41,9 @@ https://www.readymaderc.com/products/details/castle-creations-bec-switching-regu
 Switches: 2X Momentary Button Switches.
 https://www.amazon.com/dp/B07931588C
 
+Servo Tester: To get the PWM values for center and maximum up/down range
+https://www.amazon.com/dp/B08DM2CP3
+
 Wiring: 2X Wago lever nuts/connectors (Highly recommended for cleanly splitting the 5V and Ground lines. Home Depot also sells these and probably other hardware stores near you. One Wago has all your grounds connected together and the other all your positive leads connected together).
 https://www.digikey.com/short/q0m7mf3m
 
