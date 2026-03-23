@@ -49,6 +49,10 @@ Wiring: 2X Wago lever nuts/connectors (Highly recommended for cleanly splitting 
 🖨️ 3D Model Files
 The custom 3D-printed parts for the pan/tilt mechanics and electronics housing can be found here: MakerWorld: CRSF Antenna Tracker
 
+Wiring Diagram
+<img width="3903" height="8192" alt="ESP32 Power Distribution-2026-03-23-053352" src="https://github.com/user-attachments/assets/36e3d4ea-b1df-4f81-973d-d2c63cf5b6f8" />
+
+
 💻 Software & Library Requirements
 The software used to compile the code and load it onto the ESP32 is the Arduino IDE.
 
