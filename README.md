@@ -101,7 +101,7 @@ Go to the ExpressLRS UID Generator.
 
 Type your secret Binding Phrase into the "Binding Phrase" box.
 
-Look at the UID (bytes) output. It will look something like this: 252, 223, 149, 33, 213, 228.
+Look at the UID (bytes) output. It will look something like this: 252, 223, 149, 33, 43, 223.
 
 Open config.h in this repository and paste those 6 numbers into the BINDING_MAC array.
 
