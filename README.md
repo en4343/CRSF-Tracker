@@ -62,7 +62,8 @@ https://www.amazon.com/dp/B082FCRQS2
 The custom 3D-printed parts for the pan/tilt mechanics and electronics housing can be found here: MakerWorld: CRSF Antenna Tracker
 
 Wiring Diagram
-<img width="3903" height="8192" alt="ESP32 Power Distribution-2026-03-23-053352" src="https://github.com/user-attachments/assets/36e3d4ea-b1df-4f81-973d-d2c63cf5b6f8" />
+<img width="3085" height="8192" alt="ESP32 Controller Power-2026-03-23-063612" src="https://github.com/user-attachments/assets/3d7d37c4-5e34-43d7-a3b0-3aa658b68f0e" />
+
 
 
 💻 Software & Library Requirements
@@ -133,7 +134,7 @@ Click OK. Next, go to Tools > Board > Boards Manager, search for esp32 (by Espre
 
 Select Your Board & Port:
 
-Plug your ESP32 into your computer via USB.
+Plug your ESP32 into your computer via USB. I would recommend using a USB cable that has the 5v pin blocked so not to accidently get power draw from your computer if battery isn't plugged into BEC. I used a small piece of kapton tape to cover 5v pin of a usb-a to usb-micro cable.
 
 Go to Tools > Board > esp32 and select ESP32 Dev Module.
 
