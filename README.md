@@ -38,6 +38,8 @@ Switches: 2X Momentary Button Switches.
 
 Wiring: 2X Wago lever nuts/connectors (Highly recommended for cleanly splitting the 5V and Ground lines. Home Depot also sells these and probably other hardware stores near you. One Wago has all your grounds connected together and the other all your positive leads connected together).
 
+* **(Highly Recommended) Power Capacitor:** 1x 1000µF to 3300µF (10V, 16V, or 25V) Electrolytic Capacitor. Wired across the 5V and Ground Wago Connectors to prevent the heavy servos from causing voltage drops and rebooting the ESP32. (https://www.amazon.com/dp/B07R432MR2)
+
 (Highly Recommended) Resistors: 2x 1kΩ - 4.7kΩ resistors (to place inline on the servo signal wires).
 
 (Optional) Compass: Adafruit BNO085 9-DOF IMU. Note, I went with this chip because it doesn't require calibration like drone GPS chips.
