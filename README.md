@@ -25,7 +25,7 @@ Live RF Trim (Optional): Supports a physical potentiometer knob to micro-adjust 
 To build this tracker, you will need the following components:
 
 Microcontroller: ESP32 Dev Board (Standard 30 or 38-pin module).
-https://www.amazon.com/dp/B08D5ZD528?
+https://www.amazon.com/dp/B08D5ZD528
 
 Servos: 2PCS DS3218 20kg 270-Degree Servos (Full metal gear, high torque, waterproof. You absolutely need the 270° version for proper pan rotation).
 https://www.amazon.com/dp/B08MTQ1QD1
