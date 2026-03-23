@@ -14,7 +14,7 @@
 
 //================================   E L R S   B I N D I N G   ===============================
 // CRITICAL: Replace this with your transmitter's ExpressLRS UID MAC Address!
-const uint8_t BINDING_MAC[] = {252, 223, 149, 33, 213, 228}; 
+const uint8_t BINDING_MAC[] = {0, 0, 0, 0, 0, 0}; 
 
 //================================   H A R D W A R E   O P T I O N S   =======================
 #define USE_COMPASS   true  // Set to false if you are NOT using a BNO085 compass.
