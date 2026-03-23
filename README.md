@@ -1,7 +1,7 @@
 📡 CRSF-Tracker
 A high-performance, open-source Antenna Tracker designed specifically for modern Long-Range FPV.
 
-Instead of relying on heavy onboard encoders or complex Mavlink wiring, this tracker natively sniffs your CRSF/ExpressLRS telemetry directly out of the air using the ESP32's low-latency ESP-NOW protocol. It grabs the GPS coordinates your flight controller is already broadcasting and points your high-gain patch antennas dead-center at your aircraft.
+This tracker natively sniffs your CRSF/ExpressLRS telemetry directly out of the air using the ESP32's low-latency ESP-NOW protocol. It grabs the GPS coordinates your flight controller is already broadcasting and points your high-gain patch antennas dead-center at your aircraft.
 
 ⚠️ Critical Prerequisite: Your Transmitter (Radio)
 Your ExpressLRS transmitter MUST have a hardware "Backpack" chip installed. The backpack is a secondary ESP32 or ESP8285 chip inside your radio/module dedicated to communicating with ground station gear.
