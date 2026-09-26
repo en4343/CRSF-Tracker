@@ -12,6 +12,13 @@
 #define MINOR_VERSION      20
 #define PATCH_LEVEL        16 // Open Source Release (Hardware Toggles)
 
+//================================================================================================= 
+//                              WIRELESS SETTINGS 
+//================================================================================================= 
+#define WIFI_SSID "ExpressLRS TX Backpack" // Exactly as it appears on your laptop
+#define WIFI_PASS "expresslrs"
+#define UDP_PORT 14550
+
 //================================   E L R S   B I N D I N G   ===============================
 // CRITICAL: Replace this with your transmitter's ExpressLRS UID MAC Address!
 const uint8_t BINDING_MAC[] = {0, 0, 0, 0, 0, 0}; 
