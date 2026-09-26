@@ -1,5 +1,5 @@
 /*================================================================================================= 
-    Antenna Tracker - "Community Edition" (Final Flight Ready)
+    Antenna Tracker - "Community Edition" (Dual-Protocol Auto-Detect)
 =================================================================================================*/
 
 #include <Arduino.h>
@@ -8,6 +8,7 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
+#include <WiFiUdp.h>
 #include <ESP32Servo.h>
 #include <Preferences.h> 
 
@@ -37,6 +38,7 @@ volatile bool linkConnected = false;
 unsigned long lastPacketTime = 0;
 int currentChannel = 1;
 bool channelLocked = false;
+bool usingMavlink = false;
 
 // --- Ground Station (Box) Data ---
 float boxLat = 0;
@@ -60,6 +62,7 @@ int currentTrim = 0;
 Adafruit_SSD1306 display(OLED_WIDTH, OLED_HEIGHT, &Wire, OLED_RESET);
 SFE_UBLOX_GNSS myGNSS;
 HardwareSerial gpsSerial(2);
+WiFiUDP udp;
 
 #if USE_COMPASS
   Adafruit_BNO08x bno08x(BNO_RST);
@@ -104,7 +107,7 @@ void LogScreenPrintln(String s, String s2 = "") {
   display.setCursor(0,0);
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE); 
-  display.println("CRSF Tracker");
+  display.println("Antenna Tracker");
   display.println("----------------");
   
   display.setTextSize(2);
@@ -184,11 +187,10 @@ void WakeServos() {
 }
 
 // =======================================================================================
-// ESP-NOW TELEMETRY RECEIVER (Dynamic V3 & V4 Parser)
+// ESP-NOW TELEMETRY RECEIVER (CRSF Fallback)
 // =======================================================================================
 void OnDataRecv(const esp_now_recv_info_t * info, const uint8_t *data, int data_len) {
   int offset = -1;
-  
   for (int i = 4; i < 15; i++) {
       if (data[i] == CRSF_FRAMETYPE_GPS && data_len >= i + 16) { 
           offset = i;
@@ -215,9 +217,60 @@ void OnDataRecv(const esp_now_recv_info_t * info, const uint8_t *data, int data_
     uint16_t altitudeRaw = (data[offset + 13] << 8) | data[offset + 14];
     int altitude1 = altitudeRaw - 1000;
     droneAlt = (altitude1 > 32767 || altitude1 < -32768) ? (altitude1 - 4294967296) : altitude1;
-    
     droneSats = data[offset + 15];
   }
+}
+
+// =======================================================================================
+// MAVLINK UDP RECEIVER (Primary WiFi Mode)
+// =======================================================================================
+void parseMavlink(uint8_t c) {
+    static uint8_t state = 0;
+    static uint8_t payloadLen = 0;
+    static uint8_t msgId = 0;
+    static uint8_t payload[30];
+    static uint8_t payloadIdx = 0;
+
+    // Lightweight V2 State Machine for Msg 33 (GLOBAL_POSITION_INT)
+    switch (state) {
+        case 0: if (c == 0xFD) state = 1; break; // V2 Magic
+        case 1: payloadLen = c; state = 2; break; // Length
+        case 2: case 3: case 4: case 5: case 6: state++; break; // Skip flags, seq, sys, comp
+        case 7: msgId = c; state = 8; break; // MsgId byte 1
+        case 8: if (c == 0) state = 9; else state = 0; break; // MsgId byte 2
+        case 9: if (c == 0 && msgId == 33) { payloadIdx = 0; state = 10; } else state = 0; break; // MsgId byte 3
+        case 10:
+            if (payloadIdx < 30) payload[payloadIdx++] = c;
+            if (payloadIdx == 28) { // Msg 33 payload size
+                int32_t latRaw = (payload[7] << 24) | (payload[6] << 16) | (payload[5] << 8) | payload[4];
+                int32_t lonRaw = (payload[11] << 24) | (payload[10] << 16) | (payload[9] << 8) | payload[8];
+                int32_t altRaw = (payload[15] << 24) | (payload[14] << 16) | (payload[13] << 8) | payload[12]; // mm
+
+                if (latRaw != 0 && lonRaw != 0) { 
+                    droneLat = latRaw / 10000000.0;
+                    droneLon = lonRaw / 10000000.0;
+                    droneAlt = altRaw / 1000.0;
+                    droneSats = 15; // Spoof healthy satellite count since Msg33 relies on ArduPilot fix
+                }
+                state = 0;
+            }
+            break;
+    }
+}
+
+void readUDP() {
+    int packetSize = udp.parsePacket();
+    if (packetSize) {
+        lastPacketTime = millis();
+        linkConnected = true;
+        if (!channelLocked) {
+            channelLocked = true;
+            Serial.println("MAVLINK UDP LINK OK!");
+        }
+        while (udp.available()) {
+            parseMavlink(udp.read());
+        }
+    }
 }
 
 // =======================================================================================
@@ -347,8 +400,7 @@ void PerformCalibration() {
     
     calibrationDone = true;
     
-// Save calibration to non-volatile memory
-    uint32_t currentEpoch = myGNSS.getUnixEpoch(); // Grab live satellite time
+    uint32_t currentEpoch = myGNSS.getUnixEpoch(); 
     
     preferences.begin("anttrack", false);
     preferences.putFloat("offset", (float)panOffset);
@@ -363,7 +415,7 @@ void PerformCalibration() {
 }
 
 void CheckFailsafe() {
-    if (!boxGPSFixed) return; // Must wait for ground GPS to get live time/location
+    if (!boxGPSFixed) return; 
 
     preferences.begin("anttrack", true);
     float savedLat = preferences.getFloat("lat", 0);
@@ -372,20 +424,18 @@ void CheckFailsafe() {
     uint32_t savedEpoch = preferences.getUInt("epoch", 0);
     preferences.end();
     
-    if (savedLat == 0 || savedEpoch == 0) return; // No previous data exists
+    if (savedLat == 0 || savedEpoch == 0) return; 
 
     uint32_t currentEpoch = myGNSS.getUnixEpoch();
-    if (currentEpoch == 0) return; // Satellites haven't broadcasted time yet
+    if (currentEpoch == 0) return; 
 
-    // Check if the failsafe has expired
     if ((currentEpoch - savedEpoch) > (FAILSAFE_TIMEOUT * 60)) {
-        return; // Memory is too old, force a new manual calibration
+        return; 
     }
 
     struct Location savedLoc; savedLoc.lat = savedLat; savedLoc.lon = savedLon;
     float distToSavedHome = getDist(hom, savedLoc); 
 
-    // If tracker rebooted within 100m of old home, assume power bump and restore
     if (distToSavedHome < 100) { 
         getAzEl(hom, cur); 
         if (hc_vector.dist > MIN_TRACKING_DIST) { 
@@ -450,14 +500,30 @@ void setup() {
   myGNSS.setI2COutput(COM_TYPE_UBX); 
   myGNSS.setNavigationFrequency(5);  
   
-  // --- INIT ESP-NOW WIFI ---
+  // --- DUAL-PROTOCOL AUTO DETECT ---
+  LogScreenPrintln("Scanning WiFi...");
   WiFi.mode(WIFI_STA);
-  esp_wifi_set_mac(WIFI_IF_STA, BINDING_MAC);
-  WiFi.disconnect();
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  
+  unsigned long startAttempt = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 6000) {
+      delay(100);
+  }
 
-  if (esp_now_init() != ESP_OK) ESP.restart();
-  esp_now_register_recv_cb(OnDataRecv);
-  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
+  if (WiFi.status() == WL_CONNECTED) {
+      usingMavlink = true;
+      udp.begin(UDP_PORT);
+      LogScreenPrintln("MAVLink Lock", "UDP: 14550");
+  } else {
+      usingMavlink = false;
+      WiFi.disconnect();
+      esp_wifi_set_mac(WIFI_IF_STA, BINDING_MAC);
+      if (esp_now_init() != ESP_OK) ESP.restart();
+      esp_now_register_recv_cb(OnDataRecv);
+      esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
+      LogScreenPrintln("CRSF Fallback", "ESP-NOW");
+  }
+  delay(1500);
   
   // --- FINISH BOOT ---
   #if USE_TRIM_KNOB
@@ -482,11 +548,16 @@ void loop() {
   ReadCompass();
   ReadLocalGPS();
 
-  if (millis() - lastPacketTime > 2000) {
-    channelLocked = false; linkConnected = false; 
-    currentChannel++; if (currentChannel > 13) currentChannel = 1;
-    esp_wifi_set_channel(currentChannel, WIFI_SECOND_CHAN_NONE);
-    delay(10); 
+  if (usingMavlink) {
+      readUDP();
+  } else {
+      // Channel hopping only active during ESP-NOW
+      if (millis() - lastPacketTime > 2000) {
+        channelLocked = false; linkConnected = false; 
+        currentChannel++; if (currentChannel > 13) currentChannel = 1;
+        esp_wifi_set_channel(currentChannel, WIFI_SECOND_CHAN_NONE);
+        delay(10); 
+      }
   }
 
   checkHomeButton();
@@ -514,7 +585,7 @@ void loop() {
           if (currentTrim < -MAX_TRIM_ANGLE) currentTrim = -MAX_TRIM_ANGLE;
           if (currentTrim > MAX_TRIM_ANGLE)  currentTrim = MAX_TRIM_ANGLE;
       #else
-          currentTrim = 0; // Locks trim dead-center if hardware isn't installed
+          currentTrim = 0; 
       #endif
 
       static unsigned long debugTimer = 0;
